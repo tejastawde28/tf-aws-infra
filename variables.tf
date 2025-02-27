@@ -27,3 +27,47 @@ variable "availability_zones" {
   description = "List of availability zones"
   type        = list(string)
 }
+variable "custom_ami_id" {
+  description = "Custom AMI ID"
+  type        = string
+}
+
+variable "instance_type" {
+  description = "EC2 instance type"
+  type        = string
+}
+
+variable "volume_size" {
+  description = "Root volume size"
+  type        = number
+}
+
+variable "volume_type" {
+  description = "Root volume type"
+  type        = string
+}
+
+variable "key_name" {
+  description = "EC2 key pair name"
+  type        = string
+}
+
+variable "ssh_port" {
+  description = "SSH port"
+  type        = number
+}
+
+variable "http_port" {
+  description = "HTTP port"
+  type        = number
+}
+
+variable "https_port" {
+  description = "HTTPS port"
+  type        = number
+}
+
+variable "app_port" {
+  description = "Application port"
+  type        = number
+}
