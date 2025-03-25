@@ -23,7 +23,7 @@ resource "aws_instance" "webapp" {
               echo "DB_NAME=${var.db_name}" >> /etc/environment
               echo "S3_BUCKET_NAME=${aws_s3_bucket.app_bucket.id}" >> /etc/environment
               echo "CLOUDWATCH_LOG_GROUP=webapp-logs" >> /etc/environment
-              echo "CLOUDWATCH_LOG_STREAM=${aws_instance.webapp.id}-application" >> /etc/environment
+              echo "CLOUDWATCH_LOG_STREAM=$(hostname)-application" >> /etc/environment
               
               # Configure and start CloudWatch agent
               /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -s -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
