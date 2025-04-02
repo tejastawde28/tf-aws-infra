@@ -1,20 +1,28 @@
-resource "aws_instance" "webapp" {
-  ami           = var.custom_ami_id
+resource "aws_launch_template" "webapp_lt" {
+  name          = "webapp-launch-template"
+  image_id      = var.custom_ami_id
   instance_type = var.instance_type
-  vpc_security_group_ids = [
-    aws_security_group.app_sg.id,
-  ]
-  key_name             = var.key_name
-  subnet_id            = aws_subnet.public[0].id
-  iam_instance_profile = aws_iam_instance_profile.ec2_s3_profile.name
-
-  root_block_device {
-    volume_size           = var.volume_size
-    volume_type           = var.volume_type
-    delete_on_termination = true
+  key_name      = var.key_name
+  iam_instance_profile {
+    name = aws_iam_instance_profile.ec2_s3_profile.name
   }
 
-  user_data = <<-EOF
+  network_interfaces {
+    security_groups             = [aws_security_group.app_sg.id]
+    associate_public_ip_address = true
+  }
+
+  block_device_mappings {
+    device_name = "/dev/sda1"
+
+    ebs {
+      volume_size           = var.volume_size
+      volume_type           = var.volume_type
+      delete_on_termination = true
+    }
+  }
+
+  user_data = base64encode(<<-EOF
               #!/bin/bash
               # Add environment variables to /etc/environment
               echo "DB_USERNAME=${var.db_username}" >> /etc/environment
@@ -31,12 +39,12 @@ resource "aws_instance" "webapp" {
               # Restart the application service to pick up new environment variables
               systemctl restart csye6225
               EOF
+  )
 
-  disable_api_termination = false
-
-  tags = {
-    Name = "webapp-instance"
+  tag_specifications {
+    resource_type = "instance"
+    tags = {
+      Name = "webapp-instance"
+    }
   }
-
-  depends_on = [aws_db_instance.main]
 }

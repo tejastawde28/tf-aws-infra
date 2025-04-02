@@ -101,3 +101,14 @@ variable "db_engine_version" {
   description = "Database engine version"
   type        = string
 }
+
+variable "domain_name" {
+  description = "Domain name for Route53"
+  type        = string
+}
+
+
+variable "route53_zone_ids" {
+  description = "Map of environment to Route53 zone IDs"
+  type        = map(string)
+}
