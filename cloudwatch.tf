@@ -19,43 +19,6 @@ resource "aws_cloudwatch_log_group" "system_logs" {
   }
 }
 
-# CloudWatch Alarms
-resource "aws_cloudwatch_metric_alarm" "high_cpu_utilization" {
-  alarm_name          = "webapp-high-cpu"
-  comparison_operator = "GreaterThanThreshold"
-  evaluation_periods  = 2
-  metric_name         = "CPUUtilization"
-  namespace           = "AWS/EC2"
-  period              = 300
-  statistic           = "Average"
-  threshold           = 80
-  alarm_description   = "This alarm monitors for high CPU utilization"
-
-  dimensions = {
-    AutoScalingGroupName = aws_autoscaling_group.webapp_asg.name
-  }
-
-  alarm_actions = []
-}
-
-resource "aws_cloudwatch_metric_alarm" "high_memory_utilization" {
-  alarm_name          = "webapp-high-memory"
-  comparison_operator = "GreaterThanThreshold"
-  evaluation_periods  = 2
-  metric_name         = "mem_used_percent"
-  namespace           = "WebApp"
-  period              = 300
-  statistic           = "Average"
-  threshold           = 80
-  alarm_description   = "This alarm monitors for high memory utilization"
-
-  dimensions = {
-    AutoScalingGroupName = aws_autoscaling_group.webapp_asg.name
-  }
-
-  alarm_actions = []
-}
-
 # CloudWatch Alarms for Auto Scaling Policies
 resource "aws_cloudwatch_metric_alarm" "high_cpu_scale_up" {
   alarm_name          = "high-cpu-scale-up"
