@@ -40,8 +40,10 @@ resource "aws_lb_target_group" "webapp_tg" {
 # Listener for Load Balancer
 resource "aws_lb_listener" "webapp_listener" {
   load_balancer_arn = aws_lb.webapp_lb.arn
-  port              = var.http_port
-  protocol          = "HTTP"
+  port              = var.https_port
+  protocol          = "HTTPS"
+  ssl_policy        = "ELBSecurityPolicy-TLS-1-2-2017-01"
+  certificate_arn   = "arn:aws:acm:${var.aws_region}:${data.aws_caller_identity.current.account_id}:certificate/${var.ssl_certificate_id}"
 
   default_action {
     type             = "forward"

@@ -24,7 +24,7 @@ resource "aws_db_instance" "main" {
   allocated_storage      = 20
   storage_type           = "gp2"
   username               = var.db_username
-  password               = var.db_password
+  password               = random_password.db_password.result
   db_name                = var.db_name
   db_subnet_group_name   = aws_db_subnet_group.main.name
   parameter_group_name   = aws_db_parameter_group.main.name
@@ -32,6 +32,14 @@ resource "aws_db_instance" "main" {
   publicly_accessible    = false
   skip_final_snapshot    = true
   multi_az               = false
+
+  storage_encrypted = true
+  kms_key_id        = aws_kms_key.rds_key.arn
+
+  # Enable automated backups
+  backup_retention_period = 7
+  backup_window           = "03:00-05:00"
+  maintenance_window      = "Mon:00:00-Mon:03:00"
 
   tags = {
     Name = "webapp-db-instance"

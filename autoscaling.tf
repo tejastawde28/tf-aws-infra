@@ -19,7 +19,13 @@ resource "aws_autoscaling_group" "webapp_asg" {
     propagate_at_launch = true
   }
 
-  depends_on = [aws_db_instance.main]
+  depends_on = [
+    aws_launch_template.webapp_lt,
+    aws_secretsmanager_secret.db_password,
+    aws_db_instance.main,
+    aws_iam_role.ec2_s3_role,
+    aws_iam_policy.kms_access_policy,
+  ]
 }
 
 # Auto Scaling Policies

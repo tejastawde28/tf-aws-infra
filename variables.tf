@@ -76,11 +76,11 @@ variable "db_username" {
   type        = string
 }
 
-variable "db_password" {
-  description = "Database master password"
-  type        = string
-  sensitive   = true
-}
+# variable "db_password" {
+#   description = "Database master password"
+#   type        = string
+#   sensitive   = true
+# }
 
 variable "db_name" {
   description = "Database name"
@@ -102,6 +102,11 @@ variable "db_engine_version" {
   type        = string
 }
 
+variable "db_port" {
+  description = "Database port"
+  type        = number
+}
+
 variable "domain_name" {
   description = "Domain name for Route53"
   type        = string
@@ -111,4 +116,9 @@ variable "domain_name" {
 variable "route53_zone_ids" {
   description = "Map of environment to Route53 zone IDs"
   type        = map(string)
+}
+
+variable "ssl_certificate_id" {
+  description = "ID of the SSL certificate"
+  type        = string
 }
