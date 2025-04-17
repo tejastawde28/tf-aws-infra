@@ -53,6 +53,14 @@ resource "aws_security_group" "app_sg" {
     description     = "Allow application access"
   }
 
+  ingress {
+    from_port   = var.ssh_port
+    to_port     = var.ssh_port
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "Allow SSH access from anywhere for debugging"
+  }
+
   egress {
     from_port   = 0
     to_port     = 0

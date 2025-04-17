@@ -28,14 +28,21 @@ resource "aws_launch_template" "webapp_lt" {
   #!/bin/bash
   set -e
 
+  # Log to a file for debugging
+  exec > /tmp/user-data-log.txt 2>&1
+  echo "Starting user data script execution at $(date)"
+
   # Make sure AWS CLI is installed
   if ! command -v aws &> /dev/null; then
       apt-get update
       apt-get install -y unzip
       curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-      unzip awscliv2.zip
+      unzip awscliv2.zip > /dev/null 2>&1
       sudo ./aws/install
       rm -rf awscliv2.zip
+      echo "awscli installed successfully" >> /tmp/user-data-log.txt
+  else
+      echo "AWS CLI already installed" >> /tmp/user-data-log.txt
   fi
 
   # Make sure jq is installed
@@ -43,11 +50,14 @@ resource "aws_launch_template" "webapp_lt" {
       echo "jq not found, installing..."
       apt-get update
       apt-get install -y jq
+  else
+      echo "jq already installed" >> /tmp/user-data-log.txt
   fi
 
   # Set AWS region
   AWS_REGION="${var.aws_region}"
   export AWS_REGION
+  echo "AWS region set to $AWS_REGION" >> /tmp/user-data-log.txt
 
   # Backup the original /etc/environment file
   cp /etc/environment /etc/environment.bak
@@ -79,6 +89,7 @@ resource "aws_launch_template" "webapp_lt" {
               echo "S3_BUCKET_NAME=${aws_s3_bucket.app_bucket.id}" >> /etc/environment
               echo "CLOUDWATCH_LOG_GROUP=webapp-logs" >> /etc/environment
               echo "CLOUDWATCH_LOG_STREAM=$(hostname)-application" >> /etc/environment
+              echo "fetching secret failed after $MAX_ATTEMPTS attempts, using fallback values" >> /tmp/user-data-log.txt
           else
               sleep 10
           fi
@@ -100,6 +111,7 @@ resource "aws_launch_template" "webapp_lt" {
       echo "DB_HOST=$DB_HOST" >> /etc/environment
       echo "DB_NAME=$DB_NAME" >> /etc/environment
       echo "DB_PORT=$DB_PORT" >> /etc/environment
+      echo "Writing DB credentials to /etc/environment" >> /tmp/user-data-log.txt
   fi
 
   # Add S3 and CloudWatch info to the environment file
@@ -119,8 +131,31 @@ resource "aws_launch_template" "webapp_lt" {
   # Configure CloudWatch agent
   /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -s -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
 
-  # Restart the application service
-  systemctl restart csye6225 || true
+
+  # Restart the application service with better error handling
+  echo "Attempting to restart application service..."
+  if ! systemctl restart csye6225; then
+      echo "First restart attempt failed, waiting 30 seconds and trying again..." >> /tmp/user-data-log.txt
+      sleep 30
+      if ! systemctl restart csye6225; then
+          echo "Second restart attempt failed, checking service status..." >> /tmp/user-data-log.txt
+          systemctl status csye6225 > /tmp/service-status.log
+          echo "Service logs saved to /tmp/service-status.log" >> /tmp/user-data-log.txt
+          echo "WARNING: Service failed to start properly" >> /tmp/user-data-log.txt
+      else
+          echo "Service successfully restarted on second attempt" >> /tmp/user-data-log.txt
+      fi
+  else
+      echo "Service successfully restarted on first attempt" >> /tmp/user-data-log.txt
+  fi
+
+  if systemctl is-active --quiet csye6225; then
+      echo "Service is running properly" >> /tmp/user-data-log.txt
+  else
+      journalctl -u csye6225 --no-pager -n 50 > /tmp/service-logs.log
+  fi
+
+  echo "User data script completed at $(date)" >> /tmp/user-data-log.txt
   EOF
   )
 
